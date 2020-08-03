@@ -1,4 +1,4 @@
-library(shiny); library(ggplot2); library(ranger); library(caret);
+library(shiny); library(ggplot2); library(caret); library(ranger); library(e1071)
 
 shinyServer(function(input, output) {
     set.seed(2020-08-02)
@@ -9,7 +9,7 @@ shinyServer(function(input, output) {
     train <- weather.data[trainIndex,]
     test <- weather.data[-trainIndex,]
 
-    accuracies <- eventReactive(input$button, {
+    model.results <- eventReactive(input$button, {
                         rf.fit <- ranger(RainTomorrow ~ .,
                                          data = train,
                                          num.trees = input$num.trees,
@@ -42,22 +42,22 @@ shinyServer(function(input, output) {
     # =========== Train Results ===========
 
     output$trainTitle <- renderText({
-        accuracies()
+        model.results()
         "Training set results"
     })
     
     output$trainText <- renderText({
-        accuracy <- round(100 * accuracies()[5], 4)
+        accuracy <- round(100 * model.results()[5], 4)
         paste("Accuracy: ", accuracy, "%")
     })
     
     output$cm.train <- renderText({
-        accuracies()
+        model.results()
         "Confusion Matrix:"
     })
     
     output$confusionMatrix.train <- renderTable({
-        cm.values <-accuracies()[1:4]
+        cm.values <-model.results()[1:4]
         reference.no <- cm.values[1:2]
         reference.yes <- cm.values[3:4]
         test.cm <- cbind(reference.no, reference.yes)
@@ -68,22 +68,22 @@ shinyServer(function(input, output) {
     # =========== Test Results ===========
     
     output$testTitle <- renderText({
-        accuracies()
+        model.results()
         "Testing set results"
     })
 
     output$testText <- renderText({
-        accuracy <- round(100 * accuracies()[10], 4)
+        accuracy <- round(100 * model.results()[10], 4)
         paste("Test: ", accuracy, "%")
     })
     
     output$cm.test <- renderText({
-        accuracies()
+        model.results()
         "Confusion Matrix:"
     })
     
     output$confusionMatrix.test <- renderTable({
-        cm.values <-accuracies()[6:9]
+        cm.values <-model.results()[6:9]
         reference.no <- cm.values[1:2]
         reference.yes <- cm.values[3:4]
         test.cm <- cbind(reference.no, reference.yes)
